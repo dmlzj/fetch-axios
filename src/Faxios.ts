@@ -84,7 +84,10 @@ export default class Faxios {
 
       return res;
     } catch (err) {
-      throw err;
+      throw {
+        message: err,
+        request: req
+      };
     }
   }
 
@@ -106,7 +109,7 @@ export default class Faxios {
       throw new Error('request: method is undefined.');
     }
 
-    if (method.toUpperCase() === 'GET') {
+    if (method.toUpperCase() === 'GET' || method.toUpperCase() === 'DELETE') {
       url += '?' + serialize(query);
     }
     headers = Object.assign({}, this.defaultOps.headers, headers || {});
