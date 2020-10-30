@@ -49,6 +49,9 @@ export default class Faxios {
     const timeout = customOps.timeout || this.defaultOps.timeout || 30000;
     req.config = Object.assign({}, this.defaultOps, req.config);
 
+    const controller = new AbortController();
+    let signal = controller.signal;
+
     const beforeRequest = this.defaultOps.beforeRequest;
     const afterRequest = this.defaultOps.afterRequest;
 
@@ -63,13 +66,12 @@ export default class Faxios {
       // resolve request interceptor
       await this.resolveRequestInterceptor(req);
       // transform FaxiosRequest => Request
-      const request = await this.transformRequest(req);
-
+      const request = await this.transformRequest(req);      
       if (beforeRequest) {
         beforeRequest(req, request);
       }
       // call fetch api
-      const response = await promiseTimeout(timeout, window.fetch(request));
+      const response = await promiseTimeout(timeout, window.fetch(request, {signal}));
       if (afterRequest) {
         afterRequest(req, response);
       }
@@ -84,6 +86,7 @@ export default class Faxios {
 
       return res;
     } catch (err) {
+      if (err === 'Timeout') controller.abort()
       throw {
         message: err,
         request: req
